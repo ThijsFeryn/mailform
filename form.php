@@ -11,7 +11,10 @@ try{
     /**
      * Validate
      */
-    if(empty($_REQUEST['to'])){
+    if(empty($to) && isset($_REQUEST['to'])){
+        $to = $_REQUEST['to'];
+    }
+    if(empty($to)){
         throw new Exception('To address not set');
     }
     /**
@@ -21,33 +24,42 @@ try{
     /**
      * to
      */
-    $message->setTo($_REQUEST['to']);
+    $message->setTo($to);
     /**
-     * subject
+     * Subject
      */
-    if(isset($_REQUEST['subject'])){
-        $message->setSubject($_REQUEST['subject']);
-    } elseif(isset($_SERVER['HTTP_REFERER'])){
-        $message->setSubject("A message has been sent from {$_SERVER['HTTP_REFERER']} at ".date('Y-m-d H:i:s'));
-    } else {
-        $message->setSubject("A message has been sent at ".date('Y-m-d H:i:s'));
-    }
-    /**
-     * from
-     */
-    if(isset($_REQUEST['from'])){
-        if(isset($_REQUEST['fromname'])){
-            $message->setFrom($_REQUEST['from'],$_REQUEST['fromname']);
+    if(empty($subject)){
+        if(isset($_REQUEST['subject'])){
+            $subject = $_REQUEST['subject'];
+        } elseif(isset($_SERVER['HTTP_REFERER'])){
+            $subject = "A message has been sent from {$_SERVER['HTTP_REFERER']} at ".date('Y-m-d H:i:s');
         } else {
-            $message->setFrom($_REQUEST['from']);
+            $subject = "A message has been sent at ".date('Y-m-d H:i:s');
         }
-    } elseif(filter_var($_SERVER['SERVER_ADMIN'],FILTER_VALIDATE_EMAIL) !== false) {
-        $message->setFrom($_SERVER['SERVER_ADMIN'],'Contact form');
-    } else {
-        $message->setFrom('noreply@'.$_SERVER['HTTP_HOST'],'Contact form');
     }
+    $message->setSubject($subject);
     /**
-     * body
+     * From
+     */
+    if(empty($from)){
+        if(isset($_REQUEST['from'])){
+            $from = $_REQUEST['from'];
+        } elseif(filter_var($_SERVER['SERVER_ADMIN'],FILTER_VALIDATE_EMAIL) !== false) {
+            $from = $_SERVER['SERVER_ADMIN'];
+        } else {
+            $from = 'noreply@'.$_SERVER['HTTP_HOST'];
+        }
+    }
+    if(empty($fromname)){
+        if(isset($_REQUEST['fromname'])){
+            $fromname = $_REQUEST['fromname'];
+        } else {
+            $fromname = 'Contact form';
+        }
+    }
+    $message->setFrom($from,$fromname);
+    /**
+     * Body
      */
     $body = '';
     foreach($_REQUEST as $field=>$value){
@@ -55,7 +67,7 @@ try{
     }
     $message->setBody($body);
     /**
-     * transport
+     * Transport
      */
     if($smtp){
         $transport = Swift_SmtpTransport::newInstance($host,$port);
@@ -66,7 +78,7 @@ try{
         $transport = Swift_MailTransport::newInstance();
     }
     /**
-     * mailer
+     * Mailer
      */
     $mailer = Swift_Mailer::newInstance($transport);
     /**
@@ -80,14 +92,17 @@ try{
         throw new Exception('Sending e-mail failed');
     }
     /**
-     * redirect
+     * Redirect
      */
-     if(isset($_REQUEST['redirect']) && !$debug){
-        header("Location:{$_REQUEST['redirect']}");
-     } else {
-         echo "<h1>Success</h1>".PHP_EOL;
-         echo "Sending e-mail succeeded";
-     }
+    if(empty($redirect) && isset($_REQUEST['redirect'])){
+        $redirect = $_REQUEST['redirect'];
+    }
+    if(isset($redirect) && !$debug){
+       header("Location:{$_REQUEST['redirect']}");
+    } else {
+        echo "<h1>Success</h1>".PHP_EOL;
+        echo "Sending e-mail succeeded";
+    }
 } catch(Exception $e){
         echo "<h1>An error occured: ".get_class($e)."</h1>".PHP_EOL;
         echo "<h2>Message</h2>".PHP_EOL;

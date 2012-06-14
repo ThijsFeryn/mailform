@@ -20,4 +20,12 @@ $port = '25';
 /**
  * Do you want debugging?
  */
-$debug = true;
+$debug = false;
+/**
+ * Some e-mail headers you can predefine
+ */
+$to = null;
+$from = null;
+$fromname = null;
+$subject = null;
+$redirect = null;
