@@ -98,7 +98,7 @@ try{
         $redirect = $_REQUEST['redirect'];
     }
     if(isset($redirect) && !$debug){
-       header("Location:{$_REQUEST['redirect']}");
+       header("Location:{$redirect}");
     } else {
         echo "<h1>Success</h1>".PHP_EOL;
         echo "Sending e-mail succeeded";
